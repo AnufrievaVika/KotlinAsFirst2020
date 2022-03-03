@@ -108,6 +108,7 @@ class Tests {
     fun firstDuplicateIndex() {
         assertEquals(-1, firstDuplicateIndex("a u a"))
         assertEquals(-1, firstDuplicateIndex("Привет"))
+        assertEquals(2, firstDuplicateIndex("c a a"))
         assertEquals(9, firstDuplicateIndex("Он пошёл в в школу"))
         assertEquals(40, firstDuplicateIndex("Яблоко упало на ветку с ветки оно упало на на землю"))
         assertEquals(0, firstDuplicateIndex("Мы мы пошли Прямо располагался магазин"))

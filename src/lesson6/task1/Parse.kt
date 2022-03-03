@@ -125,15 +125,33 @@ fun flattenPhoneNumber(phone: String): String {
  * При нарушении формата входной строки или при отсутствии в ней чисел, вернуть -1.
  */
 fun bestLongJump(jumps: String): Int {
-    val results = jumps.split(Regex("""[\s\-%]"""))
-    var maxResult = -1
-    if (jumps.contains(Regex("""[^\d\s\-%)]""")) ||
-        jumps.contains(Regex("""([\-%])(-|%|\d)|(-|%|\d)([\-%])"""))) return -1
-
-    for (element in results)
-        if (element.isNotEmpty() && element.toInt() > maxResult)
-            maxResult = element.toInt()
-    return maxResult
+    val i: Int
+    var a = ""
+    var b = 0
+    var c = 0
+    for (i in jumps.indices) {
+        when {
+            (jumps[i] in "0123456789") && (i == jumps.length - 1)
+            -> {
+                a += jumps[i]
+                b = a.toInt()
+            }
+            (jumps[i] in "0123456789")
+            -> a += jumps[i]
+            ((jumps[i] == ' ') || (jumps[i] == '%') || (jumps[i] == '-')) -> {
+                b = if (a == "") 0
+                else a.toInt()
+                a = ""
+            }
+            else -> {
+                c = 0
+                break
+            }
+        }
+        if (b > c) c = b
+    }
+    if (c == 0) c = -1
+    return c
 }
 
 /**
@@ -148,15 +166,35 @@ fun bestLongJump(jumps: String): Int {
  * вернуть -1.
  */
 fun bestHighJump(jumps: String): Int {
-    val results = Regex(""" """).split(jumps)
-    var maxResult = -1
-    if (jumps.contains(Regex("""[^\d\s\-+%)]""")) ||
-        jumps.contains(Regex("""([\-+%])(\d)|(\d)([\-+%])"""))) return -1
-
-    for (i in results.indices step 2)
-        if (results[i + 1] == "+" && results[i].toInt() > maxResult)
-            maxResult = results[i].toInt()
-    return maxResult
+    val i: Int
+    var n = ""
+    var a = ""
+    var b = 0
+    var c = 0
+    for (i in jumps.indices) {
+        if (jumps[i] != ' ') n += jumps[i]
+    }
+    for (i in 0..n.length - 1) {
+        when (n[i]){
+            in "0123456789" -> a += n[i]
+            '+' -> {
+                b = if (a == "") 0
+                else a.toInt()
+                a = ""
+            }
+            in " %-" -> {
+                b = 0
+                a = ""
+            }
+            else -> {
+                c = 0
+                break
+            }
+        }
+        if (b > c) c = b
+    }
+    if (c == 0) c = -1
+    return c
 }
 
 /**
@@ -193,13 +231,36 @@ fun plusMinus(expression: String): Int {
  * Пример: "Он пошёл в в школу" => результат 9 (индекс первого 'в')
  */
 fun firstDuplicateIndex(str: String): Int {
-    val list = Regex(""" """).split(str)
-    var count = 0
-    if (list.size <= 1) return -1
-    if (list[0].equals(list[1], ignoreCase = true)) return 0
-    for (i in 1 until list.size - 1) {
-        count += list[i - 1].length + 1
-        if (list[i].equals(list[i + 1], ignoreCase = true)) return count
+    var k = 0
+    var s = ""
+    var l = ""
+    var n = -1
+    var c = 0
+    for (i in str.indices) {
+        when {
+            (i == str.length - 1) -> {
+                if (s == "") {
+                    k = i
+                }
+                s += str[i].lowercaseChar()
+                k = i
+                n = k - l.length - 1
+                if (s == l) return n
+            }
+            ((str[i] != ' ') && (i != str.length - 1)) -> {
+                if (s == "") {
+                    k = i
+                }
+                s += str[i].lowercaseChar()
+            }
+            else -> {
+                k = i
+                if (s == l) return n
+                l = s
+                s = ""
+                n = k - l.length
+            }
+        }
     }
     return -1
 }

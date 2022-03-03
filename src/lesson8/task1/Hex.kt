@@ -2,6 +2,9 @@
 
 package lesson8.task1
 
+import lesson1.task1.sqr
+import kotlin.math.*
+
 /**
  * Точка (гекс) на шестиугольной сетке.
  * Координаты заданы как в примере (первая цифра - y, вторая цифра - x)
@@ -28,7 +31,7 @@ package lesson8.task1
  * Более подробно про шестиугольные системы координат можно почитать по следующей ссылке:
  *   https://www.redblobgames.com/grids/hexagons/
  */
-data class HexPoint(val x: Int, val y: Int) {
+data class HexPoint(var x: Int, var y: Int) {
     /**
      * Средняя (3 балла)
      *
@@ -177,6 +180,36 @@ fun HexPoint.move(direction: Direction, distance: Int): HexPoint = TODO()
  */
 fun pathBetweenHexes(from: HexPoint, to: HexPoint): List<HexPoint> = TODO()
 
+
+fun neighbours(addresses: List<String>, person: String): List<String> {
+
+    if (person.contains("[^а-яА-Я ]"))
+        throw IllegalArgumentException()
+
+    val personLives = mutableMapOf<String, String>()
+    val inHouseLive = mutableMapOf<String, MutableSet<String>>()
+
+    for (address in addresses) {
+        if (!address.matches("""([а-яА-Я])+ ([а-яА-Я])+ - ([а-яА-Я])+ ([а-я А-Я])+, +\d+, +кв. \d+""".toRegex()))
+            throw IllegalArgumentException()
+        val fields = address.split(", ")
+        val name = fields[0].split("-")[0].trim()
+        val street = fields[0].split("-")[1].trim()
+        val house = fields[1].trim()
+
+        val fullHouse = street + " " + house.filter { it != ' ' }
+        personLives[name] = fullHouse
+        if (inHouseLive[fullHouse]?.add(name) == null)
+            inHouseLive[fullHouse] = mutableSetOf(name)
+    }
+
+    if (personLives[person] == null)
+        return emptyList()
+
+    return inHouseLive[personLives[person]]!!.minus(person).toList()
+}
+
+
 /**
  * Очень сложная (20 баллов)
  *
@@ -192,7 +225,76 @@ fun pathBetweenHexes(from: HexPoint, to: HexPoint): List<HexPoint> = TODO()
  *
  * Если все три точки совпадают, вернуть шестиугольник нулевого радиуса с центром в данной точке.
  */
-fun hexagonByThreePoints(a: HexPoint, b: HexPoint, c: HexPoint): Hexagon? = TODO()
+fun hexagonByThreePoints(a: HexPoint, b: HexPoint, c: HexPoint): Hexagon? {
+    var a11 = 0
+    var b11 = 0
+    var radius1 = 0
+    val maxx1 = max(a.x, max(b.x, c.x))
+    val minx1 = min(a.x, min(b.x, c.x))
+    val maxy1 = max(a.y, max(b.y, c.y))
+    val miny1 = min(a.y, min(b.y, c.y))
+    val ab = sqrt((sqr(a.x - b.x) + sqr(a.y - b.y)).toDouble())
+    val ac = sqrt((sqr(a.x - c.x) + sqr(a.y - c.y)).toDouble())
+    val bc = sqrt((sqr(b.x - c.x) + sqr(b.y - c.y)).toDouble())
+    val p = ((ab + ac + bc) / 4.5).toInt()
+    val rasnizamax =
+        max(max(a.y, max(b.y, c.y)) - min(a.y, min(b.y, c.y)), max(a.x, max(b.x, c.x)) - min(a.x, min(b.x, c.x)))
+    val rasnizamin = min(
+        min(abs(a.x - c.x), min(abs(a.x - b.x), abs(b.x - c.x))),
+        min(abs(a.y - c.y), min(abs(a.y - b.y), abs(b.y - c.y)))
+    )
+    when {
+        ((a == b) && (b == c)) -> return Hexagon(a, 0)
+        (((a.x == b.x) && (b.x == c.x))) -> {
+            radius1 = max(a.y, max(b.y, c.y)) - min(a.y, min(b.y, c.y))
+            b11 = min(a.y, min(b.y, c.y))
+            a11 = a.x + radius1
+            return Hexagon(HexPoint(a11, b11), radius1)
+        }
+        (((a.y == b.y) && (b.y == c.y))) -> {
+            radius1 = max(a.x, max(b.x, c.x)) - min(a.x, min(b.x, c.x))
+            b11 = a.y + radius1
+            a11 = min(a.x, min(b.x, c.x))
+            return Hexagon(HexPoint(a11, b11), radius1)
+        }
+        else
+        -> {
+            for (radius in max(rasnizamin, rasnizamax / 2)..rasnizamax) {
+                for (b1 in maxy1 - radius..miny1 + radius) {
+                    for (a1 in maxx1 - radius..minx1 + radius) {
+                        if ((((a.y == -a.x + b1 + a1 + radius) && (a.x in a1..a1 + radius)) ||
+                                    ((a.y == -a.x + b1 + a1 - radius) && (a.x in a1 - radius..a1)) ||
+                                    ((a.y == b1 - radius) && (a.x in a1..a1 + radius)) ||
+                                    ((a.y == b1 + radius) && (a.x in a1 - radius..a1)) ||
+                                    ((a.x == a1 - radius) && (a.y in b1..b1 + radius)) ||
+                                    ((a.x == a1 + radius) && (a.y in b1 - radius..b1))) &&
+
+                            (((b.y == -b.x + b1 + a1 + radius) && (b.x in a1..a1 + radius)) ||
+                                    ((b.y == -b.x + b1 + a1 - radius) && (b.x in a1 - radius..a1)) ||
+                                    ((b.y == b1 - radius) && (b.x in a1..a1 + radius)) ||
+                                    ((b.y == b1 + radius) && (b.x in a1 - radius..a1)) ||
+                                    ((b.x == a1 - radius) && (b.y in b1..b1 + radius)) ||
+                                    ((b.x == a1 + radius) && (b.y in b1 - radius..b1))) &&
+
+                            (((c.y == -c.x + b1 + a1 + radius) && (c.x in a1..a1 + radius)) ||
+                                    ((c.y == -c.x + b1 + a1 - radius) && (c.x in a1 - radius..a1)) ||
+                                    ((c.y == b1 - radius) && (c.x in a1..a1 + radius)) ||
+                                    ((c.y == b1 + radius) && (c.x in a1 - radius..a1)) ||
+                                    ((c.x == a1 - radius) && (c.y in b1..b1 + radius)) ||
+                                    ((c.x == a1 + radius) && (c.y in b1 - radius..b1)))
+                        ) {
+                            a11 = a1
+                            b11 = b1
+                            radius1 = radius
+                            return Hexagon(HexPoint(a11, b11), radius1)
+                        }
+                    }
+                }
+            }
+            return null
+        }
+    }
+}
 
 /**
  * Очень сложная (20 баллов)
@@ -205,6 +307,5 @@ fun hexagonByThreePoints(a: HexPoint, b: HexPoint, c: HexPoint): Hexagon? = TODO
  * Пример: 13, 32, 45, 18 -- шестиугольник радиусом 3 (с центром, например, в 15)
  */
 fun minContainingHexagon(vararg points: HexPoint): Hexagon = TODO()
-
 
 

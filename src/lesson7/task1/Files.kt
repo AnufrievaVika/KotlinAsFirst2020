@@ -2,6 +2,7 @@
 
 package lesson7.task1
 
+import lesson3.task1.digitNumber
 import java.io.File
 import kotlin.math.*
 
@@ -66,9 +67,9 @@ fun alignFile(inputName: String, lineLength: Int, outputName: String) {
 fun deleteMarked(inputName: String, outputName: String) {
     val writer = File(outputName).bufferedWriter()
     for (line in File(inputName).readLines()) {
-        if (line.isEmpty() || line.isNotEmpty() && line.indexOf("_") != 0) {
+        if (((line.isNotEmpty()) && (line[0] != '_')) || (line.isEmpty())) {
             writer.write(line)
-            writer.newLine()
+            writer.appendLine()
         }
     }
     writer.close()
@@ -440,8 +441,82 @@ fun markdownToHtmlSimple(inputName: String, outputName: String) {
  * (Отступы и переносы строк в примере добавлены для наглядности, при решении задачи их реализовывать не обязательно)
  */
 fun markdownToHtmlLists(inputName: String, outputName: String) {
-    TODO()
+    val writer = File(outputName).bufferedWriter()
+    var s = ""
+    var str1 = ""
+    var prob = 0
+    var nomstr = 0
+    var mas: ArrayList<Int> = arrayListOf()
+    var str: ArrayList<String> = arrayListOf()
+    var spisok: ArrayList<Int> = arrayListOf()
+    writer.write("<html><body><p>")
+    for (line in File(inputName).readLines()) {
+        for (i in line.indices) {
+            if ((i > 1) && (line[i - 1] == ' ') && (line[i - 2] == '*')) s += line[i]
+            if ((i > 2) && (line[i - 1] == ' ') && (line[i - 2] == '.') && (line[i - 3] in "123456789")) s += line[i]
+            if ((s != "") && (s != line[i].toString())) s += line[i]
+        }
+        while (line[prob] == ' ') {
+            prob++
+        }
+        if (line[prob] == '*') spisok.add(1)
+        else spisok.add(0)
+        str.add(s)
+        mas.add(prob)
+        nomstr++
+        prob = 0
+        s = ""
+    }
+    nomstr -= 1
+    if (spisok[0] == 1) writer.write("<ul>")
+    if (spisok[0] == 0) writer.write("<ol>")
+    for (i in 0..nomstr) {
+        writer.write("<li>")
+        str1 = str[i]
+        writer.write("$str1")
+        if (((i != nomstr) && ((mas[i] - mas[i + 1] == 4) || (mas[i] == mas[i + 1]))) || (i == nomstr)) {
+            writer.write("</li>")
+        }
+        if ((i != nomstr) && (mas[i + 1] < mas[i])) {
+            var mas1 = mas[i]
+            for (j in 1..(mas[i] - mas[i + 1]) / 4) {
+                var l = 0
+                mas1 -= 4
+                for (k in i - 1 downTo 0) {
+                    if (mas1 == mas[k]) {
+                        l = k
+                        break
+                    }
+                }
+                if (spisok[l + 1] == 0) writer.write("</ol></li>")
+                if (spisok[l + 1] == 1) writer.write("</ul></li>")
+            }
+        }
+        if ((i == nomstr) && (0 < mas[i])) {
+            var mas1 = mas[i]
+            for (j in 1..mas[i] / 4) {
+                var l = 0
+                mas1 -= 4
+                for (k in i - 1 downTo 0) {
+                    if (mas1 == mas[k]) {
+                        l = k
+                        break
+                    }
+                }
+                if ((l + 1 <= nomstr) && (spisok[l + 1] == 0)) writer.write("</ol></li>")
+                if ((l + 1 <= nomstr) && (spisok[l + 1] == 1)) writer.write("</ul></li>")
+            }
+        }
+        if ((i != nomstr) && (spisok[i + 1] == 1) && (mas[i] < mas[i + 1])) writer.write("<ul>")
+        if ((i != nomstr) && (spisok[i + 1] == 0) && (mas[i] < mas[i + 1])) writer.write("<ol>")
+
+    }
+    if (spisok[0] == 1) writer.write("</ul>")
+    if (spisok[0] == 0) writer.write("</ol>")
+    writer.write("</p></body></html>")
+    writer.close()
 }
+
 
 /**
  * Очень сложная (30 баллов)
@@ -573,127 +648,200 @@ fun power(a: Int, b: Int) = 10.0.pow(a - b).toInt()
 
 fun printDivisionProcess(lhv: Int, rhv: Int, outputName: String) {
     val writer = File(outputName).bufferedWriter()
-    val numOfNumb = printLength(lhv)
-    var tempQuotient = 0
-    var lhvNum = numOfNumb - 1
-    var firstDivisible = 0
-
+    var vremenchastnoe = 0
+    var pervoevychet = 0
+    var m = 0
+    var vychet = 0
+    var poluch = 0
+    var ostat = 0
+    var ostat1 = 0
+    var dl = 0
+    var sled = 0
+    val koltsifr = digitNumber(lhv)
+    var k = koltsifr - 1
     if (lhv < rhv) {
-        firstDivisible = (lhv / (10.0.pow(lhvNum))).toInt()
-        tempQuotient = firstDivisible / rhv
+        pervoevychet = (lhv / (10.0.pow(k))).toInt() // число доступное для деления
+        vremenchastnoe = pervoevychet / rhv
     } else {
-        while (tempQuotient < 1) {
-            firstDivisible = (lhv / (10.0.pow(lhvNum))).toInt()
-            tempQuotient = firstDivisible / rhv
-            lhvNum -= 1
+        while (vremenchastnoe < 1) { // промежуточное частное
+            pervoevychet = (lhv / (10.0.pow(k))).toInt() // число доступное для деления
+            vremenchastnoe = pervoevychet / rhv
+            k--
         }
     }
-
-    var firstAnswer = tempQuotient * rhv
-    var counter = 0
-    if ((lhv / rhv < 10) && (printLength(firstAnswer) < printLength(lhv))) {
-        counter = 1
-        writer.write("$lhv | $rhv")
-        writer.newLine()
-        for (j in 1 until printLength(lhv) - printLength(firstAnswer)) {
-            writer.write(" ")
-            counter += 1
+    vychet = vremenchastnoe * rhv
+    val pervayzifra = vychet / (10.0.pow((digitNumber(vychet) - 1))).toInt()
+    val pervayzifra1 = lhv / (10.0.pow((digitNumber(lhv) - 1))).toInt()
+    when {
+        ((lhv / rhv < 10) && (digitNumber(vychet) < digitNumber(lhv))) -> {
+            m = 1
+            writer.write("$lhv | $rhv")    // первая строка
+            writer.appendLine()
+            for (i in 1 until digitNumber(lhv) - digitNumber(vychet)) {
+                writer.write(" ")
+                m++
+            }
         }
+        (pervayzifra > pervayzifra1) && (digitNumber(vychet) < digitNumber(lhv)) -> {
+            writer.write("$lhv | $rhv")    // первая строка
+            writer.appendLine()
+            m = 1
+        }
+        else -> {
+            writer.write(" $lhv | $rhv")    // первая строка
+            writer.appendLine()
+        }
+    }
+    writer.write("-$vychet")
+    for (i in 1..koltsifr - digitNumber(vychet) - m + 3) writer.write(" ")
+    poluch = lhv / rhv
+    writer.write("$poluch")
+    writer.appendLine()
+
+
+    if ((lhv / rhv < 10) && (digitNumber(vychet) < digitNumber(lhv))) {
+        for (i in 1..digitNumber(lhv)) writer.write("-")
+        writer.appendLine()
     } else {
-        writer.write(" $lhv | $rhv")
-        writer.newLine()
+        for (i in 1..digitNumber(vychet) + 1) writer.write("-")
+        writer.appendLine()
     }
 
-    writer.write("-$firstAnswer")
-
-    for (i in 1..numOfNumb - printLength(firstAnswer) - counter + 3) writer.write(" ")
-    val nextAnswer: Int = lhv / rhv
-    writer.write("$nextAnswer")
-    writer.newLine()
-
-
-    if ((lhv / rhv < 10) && (printLength(firstAnswer) < printLength(lhv))) {
-        for (i in 1..printLength(lhv)) writer.write("-")
-        writer.newLine()
-    } else {
-        for (i in 1..printLength(firstAnswer) + 1) writer.write("-")
-        writer.newLine()
-    }
-
-    var remainder = if ((lhv / rhv < 10) && (printLength(firstAnswer) < printLength(lhv))) {
-        lhv - firstAnswer
-    } else firstDivisible - firstAnswer
-
-    counter = 0
-    for (i in 1..printLength(firstAnswer) - printLength(remainder) + 1) {
-        counter += 1
+    if ((lhv / rhv < 10) && (digitNumber(vychet) < digitNumber(lhv))) {
+        ostat = lhv - vychet
+    } else ostat = pervoevychet - vychet
+    for (i in 1..digitNumber(vychet) + 1 - digitNumber(ostat)) {
+        dl++
         writer.write(" ")
     }
-
-    var nextReminder = 0
     if (lhv / rhv < 10) {
-        writer.write("$remainder")
+        writer.write("$ostat")
     } else {
-        writer.write("$remainder")
-        nextReminder = lhv % power(numOfNumb, printLength(firstDivisible)) /
-                power(numOfNumb, printLength(firstDivisible) + 1)
-        writer.write("$nextReminder")
-        writer.newLine()
+        writer.write("$ostat")
+        ostat1 = ((lhv % 10.0.pow(koltsifr - digitNumber(pervoevychet))).toInt() /
+                (10.0.pow(koltsifr - digitNumber(pervoevychet) - 1))).toInt()
+        writer.write("$ostat1")
+        writer.appendLine()
     }
+    dl += digitNumber(ostat) + digitNumber(ostat1)
+    ostat = ostat * 10 + ostat1
+    sled = digitNumber(pervoevychet)
+    if (lhv / rhv < 10) sled = 1000
 
-    counter += printLength(remainder) + printLength(nextReminder)
-    remainder = remainder * 10 + nextReminder
-    var nextDivisible = printLength(firstDivisible)
-    if (lhv / rhv < 10) nextDivisible = 1000
+    //---------------------------------------------------------
 
-
-    var secCounter = 0
-    while (numOfNumb - nextDivisible > 0) {
-        nextDivisible += 1
-        firstAnswer = (remainder / rhv) * rhv
-        for (j in 1 until counter - printLength(firstAnswer)) {
-            secCounter += 1
+    var dl1 = 0
+    var dl2 = 0
+    while (koltsifr - sled > 0) {
+        sled++
+        vychet = (ostat / rhv) * rhv
+        for (i in 1..dl - 1 - digitNumber(vychet)) {
+            dl1++
             writer.write(" ")
         }
-        writer.write("-$firstAnswer")
-        writer.newLine()
+        writer.write("-$vychet")
+        writer.appendLine()
 
-        for (i in 1..min(secCounter, counter - printLength(remainder))) writer.write(" ")
+        for (i in 1..min(dl1, dl - digitNumber(ostat))) writer.write(" ")
+        for (i in 1..max(digitNumber(vychet) + 1, digitNumber(ostat))) writer.write("-")
+        writer.appendLine()
+        dl = 0
 
-        for (i in 1..max(printLength(firstAnswer) + 1, printLength(remainder))) writer.write("-")
-        writer.newLine()
-        counter = 0
-
-        remainder -= firstAnswer
-        for (i in 1..secCounter - printLength(remainder) + printLength(firstAnswer) + 1) {
-            counter += 1
+        ostat -= vychet
+        for (i in 1..dl1 - digitNumber(ostat) + digitNumber(vychet) + 1) {
+            dl++
             writer.write(" ")
         }
-        writer.write("$remainder")
-
+        writer.write("$ostat")
         when {
-            (numOfNumb - nextDivisible == 1) -> {
-                nextReminder = lhv % power(numOfNumb, nextDivisible)
-                writer.write("$nextReminder")
-                counter += printLength(remainder) + printLength(nextReminder)
-                remainder = remainder * 10 + nextReminder
-                writer.newLine()
+            (koltsifr - sled == 1) -> {
+                ostat1 = lhv % (10.0.pow(koltsifr - sled)).toInt()
+                writer.write("$ostat1")
+                dl += digitNumber(ostat) + digitNumber(ostat1)
+                ostat = ostat * 10 + ostat1
+                writer.appendLine()
             }
-            (numOfNumb - nextDivisible == 0) -> {
-                nextReminder = lhv % power(numOfNumb, nextDivisible)
+            (koltsifr - sled == 0) -> {
+                ostat1 = lhv % (10.0.pow(koltsifr - sled)).toInt()
             }
             else -> {
-                nextReminder = lhv % power(numOfNumb, nextDivisible) /
-                        (power(numOfNumb, nextDivisible + 1))
-                writer.write("$nextReminder")
-                counter += printLength(remainder) + printLength(nextReminder)
-                remainder = remainder * 10 + nextReminder
-                writer.newLine()
+                ostat1 = (lhv % (10.0.pow(koltsifr - sled)).toInt() / (10.0.pow(koltsifr - sled - 1))).toInt()
+                writer.write("$ostat1")
+                dl += digitNumber(ostat) + digitNumber(ostat1)
+                ostat = ostat * 10 + ostat1
+                writer.appendLine()
             }
         }
-        secCounter = 0
+        dl1 = 0
     }
+
     writer.close()
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+fun robot(inputName: String, moves: String): String {
+    var asterisks = 0
+    var x = 0
+    var y = 0
+    val freecells = mutableMapOf<Pair<Int, Int>, Int>()
+    val text = File(inputName).readLines()
+    for ((index1, line) in File(inputName).readLines().withIndex()) {
+        if (!line.matches("""([.*#]*)""".toRegex()))
+            throw IllegalArgumentException()
+        for ((index, value) in line.withIndex()) {
+            if (value == '*') {
+                x = index + 1
+                y = index1 + 1
+                asterisks++
+                freecells[Pair(x, y)] = 1
+            }
+            if (value == '.') {
+                freecells[Pair(index1 + 1, index + 1)] = 1
+            }
+        }
+        if ((index1 in text.indices) && (text[index1].length != text[0].length)) return "-1"
+        if (asterisks > 1) return "-1"
+    }
+    if (!moves.matches("""[ldur]*""".toRegex()))
+        throw IllegalArgumentException()
+    for (i in moves.indices) {
+        when {
+            (moves[i] == 'l') && (freecells[Pair(y, x - 1)] == 1) -> x -= 1
+            (moves[i] == 'r') && (freecells[Pair(y, x + 1)] == 1) -> x += 1
+            (moves[i] == 'u') && (freecells[Pair(y - 1, x)] == 1) -> y -= 1
+            (moves[i] == 'd') && (freecells[Pair(y + 1, x)] == 1) -> y += 1
+        }
+    }
+    val y1 = text.size + 1 - y
+    return "по горизонтали(x): $x, по вертикали(y): $y1"
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

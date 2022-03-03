@@ -3,7 +3,9 @@
 package lesson2.task1
 
 import lesson1.task1.discriminant
-import kotlin.math.*
+import lesson1.task1.sqr
+import kotlin.math.max
+import kotlin.math.sqrt
 
 // Урок 2: ветвления (здесь), логический тип (см. 2.2).
 // Максимальное количество баллов = 6
@@ -68,11 +70,13 @@ fun minBiRoot(a: Double, b: Double, c: Double): Double {
  * вернуть строку вида: «21 год», «32 года», «12 лет».
  */
 fun ageDescription(age: Int): String =
-    when {
-        age % 100 != 11 && age % 10 == 1 -> "$age год"
-        age % 100 !in 12..14 && age % 10 in 2..4 -> "$age года"
-        else -> "$age лет"
-}
+    when{
+        (((age !in 10..20)) && (age < 100) && (age % 10 == 1)) -> "$age год"
+        (((age !in 10..20)) && (age < 100) && ((age % 10 == 2) || (age % 10 == 3) || (age % 10 == 4))) -> "$age года"
+        (((age !in 110..120)) && (age > 100) && (age % 10 == 1)) -> "$age год"
+        (((age !in 110..120)) && (age > 100) && ((age % 10 == 2) || (age % 10 == 3) || (age % 10 == 4))) -> "$age года"
+        else -> "$age лет"}
+
 
 /**
  * Простая (2 балла)
@@ -85,17 +89,15 @@ fun ageDescription(age: Int): String =
 fun timeForHalfWay(
     t1: Double, v1: Double,
     t2: Double, v2: Double,
-    t3: Double, v3: Double): Double {
-    val halfS = (t1 * v1 + t2 * v2 + t3 * v3) / 2
-    val s1 = t1 * v1
-    val s2 = t1 * v1 + t2 * v2
-    val s3 = t1 * v1 + t2 * v2 + t3 * v3
-    return when {
-        halfS > s1 && halfS <= s2 -> t1 + (halfS - s1) / v2
-        halfS > s2 && halfS <= s3 -> t1 + t2 + (halfS - s2) / v3
-        else -> halfS / v1
-    }
+    t3: Double, v3: Double
+): Double =
+    when{
+        ((v1 * t1 + v2 * t2 + v3 * t3) / 2 <= v1 * t1) -> {((v1 * t1 + v2 * t2 + v3 * t3) / 2) / v1}
+        (((v1 * t1 + v2 * t2 + v3 * t3) / 2 > v1 * t1) && ((v1 * t1 + v2 * t2 + v3 * t3) / 2 <= v1 * t1 + v2 * t2)) ->
+        {t1 + ((v1 * t1 + v2 * t2 + v3 * t3) / 2 - v1 * t1) / v2}
+        else -> {t1 + t2 + ((v1 * t1 + v2 * t2 + v3 * t3) / 2 - v1 * t1 - v2 * t2) / v3}
 }
+
 
 /**
  * Простая (2 балла)
@@ -109,16 +111,14 @@ fun timeForHalfWay(
 fun whichRookThreatens(
     kingX: Int, kingY: Int,
     rookX1: Int, rookY1: Int,
-    rookX2: Int, rookY2: Int): Int {
-    val condition1 = (kingX == rookX1 || kingY == rookY1)
-    val condition2 = (kingX == rookX2 || kingY == rookY2)
-    return when {
-        condition1 && condition2 -> 3
-        condition2 -> 2
-        condition1 -> 1
-        else -> 0
+    rookX2: Int, rookY2: Int
+): Int =
+    when{
+        (((kingX == rookX1) || (kingY == rookY1)) && ((kingX == rookX2) || (kingY == rookY2))) -> {3}
+        (((kingX == rookX1) || (kingY == rookY1)) && ((kingX != rookX2) || (kingY != rookY2))) -> {1}
+        (((kingX != rookX1) || (kingY != rookY1)) && ((kingX == rookX2) || (kingY == rookY2))) -> {2}
+        else -> {0}
     }
-}
 
 /**
  * Простая (2 балла)
@@ -134,17 +134,17 @@ fun whichRookThreatens(
 fun rookOrBishopThreatens(
     kingX: Int, kingY: Int,
     rookX: Int, rookY: Int,
-    bishopX: Int, bishopY: Int): Int {
-    val condition2 = abs(kingX - bishopX) == abs(kingY - bishopY)
-    val condition1 = kingX == rookX || kingY == rookY
-    return when {
-        condition1 && condition2 -> 3
-        condition2 -> 2
-        condition1 -> 1
-        else -> 0
-    }
-}
-
+    bishopX: Int, bishopY: Int
+): Int =
+    when{
+        (((bishopX - kingX) * (bishopX - kingX) == (bishopY - kingY) * (bishopY - kingY)) &&
+        ((kingX == rookX) || (kingY == rookY))) -> {3}
+        (((bishopX - kingX) * (bishopX - kingX) == (bishopY - kingY) * (bishopY - kingY)) &&
+        ((kingX != rookX) && (kingY != rookY))) -> {2}
+        (((bishopX - kingX) * (bishopX - kingX) != (bishopY - kingY) * (bishopY - kingY)) &&
+        ((kingX == rookX) || (kingY == rookY))) -> {1}
+        else -> {0}
+        }
 
 /**
  * Простая (2 балла)
@@ -154,20 +154,13 @@ fun rookOrBishopThreatens(
  * прямоугольным (вернуть 1) или тупоугольным (вернуть 2).
  * Если такой треугольник не существует, вернуть -1.
  */
-fun triangleKind(a: Double, b: Double, c: Double): Int {
-    val max1 = max(a, max(b, c))
-    val min1 = min(a, min(b, c))
-    val average = a + b + c - min1 - max1
-    if (max1 < min1 + average) {
-        return when {
-            max1.pow(2) < average.pow(2) + min1.pow(2) -> 0
-            max1.pow(2) == average.pow(2) + min1.pow(2) -> 1
-            max1.pow(2) > average.pow(2) + min1.pow(2) -> 2
-            else -> -1
-        }
+fun triangleKind(a: Double, b: Double, c: Double): Int =
+    when{
+    ((a > b + c) || (b > a + c) || (c > a + b) || (a <= 0) || (b <= 0) || (c <= 0)) -> {-1}
+    ((a * a + b * b == c * c) || (a * a + c * c == b * b) || (b * b + c * c == a * a)) -> {1}
+    ((a * a + b * b < c * c) || (a * a + c * c < b * b) || (b * b + c * c < a * a)) -> {2}
+    else -> {0}
     }
-    return -1
-}
 
 /**
  * Средняя (3 балла)
@@ -178,4 +171,11 @@ fun triangleKind(a: Double, b: Double, c: Double): Int {
  * Если пересечения нет, вернуть -1.
  */
 fun segmentLength(a: Int, b: Int, c: Int, d: Int): Int =
-    if (minOf(b, d) - maxOf(a, c) >= 0) minOf(b, d) - maxOf(a, c) else -1
+    when {
+        ((b <= d) && (a <= c)) && (b >= c) -> (b - c)
+        ((d <= b) && (a <= c)) -> (d - c)
+        ((a <= d) && (d <= b)) -> (d - a)
+        ((b <= d) && (c <= a)) -> (b - a)
+        else -> -1
+    }
+
