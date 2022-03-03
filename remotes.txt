@@ -1,0 +1,7 @@
+$ git remote -v
+origin  https://github.com/AnufrievaVika/KotlinAsFirst2020 (fetch)
+origin  https://github.com/AnufrievaVika/KotlinAsFirst2020 (push)
+upstream-my     https://github.com/AnufrievaVika/KotlinAsFirst2021 (fetch)
+upstream-my     https://github.com/AnufrievaVika/KotlinAsFirst2021 (push)
+upstream-theirs https://github.com/UlyanaBoykova/KotlinAsFirst2021 (fetch)
+upstream-theirs https://github.com/UlyanaBoykova/KotlinAsFirst2021 (push)
